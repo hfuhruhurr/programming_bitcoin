@@ -56,3 +56,59 @@ class FieldElement:
 		n = exponent % (self.prime - 1)  # force exponent in [0..prime-2]
 		num = self.num**n % self.prime 
 		return self.__class__(num, self.prime)
+
+
+class Point:
+	def __init__(self, x, y, a, b) -> None:
+		self.a = a
+		self.b = b 
+		self.x = x 
+		self.y = y 
+		if self.x is None and self.y is None:  # this is how we define the 'point at infinity', aka the additive identity
+			return  # won't pass the formula check below but it's a valid, albeit artificial, point on the curve
+		if self.y**2 != self.x**3 + a*x + b:
+			error = f'The point ({x}, {y}) is not on the curve, brah.'
+			raise ValueError(error)
+
+	def __eq__(self, other):
+		same_point = self.x == other.x and self.y == other.y
+		same_curve = self.a == other.a and self.b == other.b
+		return same_point and same_curve
+
+	def __ne__(self, other):
+		return not (self == other)
+
+	def __add__(self, other):
+		if self.a != other.a or self.b != other.b:
+			error = f'Point {self} is not on the same curve as Point {other}, chief.'
+			raise TypeError(error)
+
+		# Case 1: One of the points is the point at infinity
+		if self.a is None:   # self is the point at infinity so added this to other results in other (additive identity, bro)
+			return other 
+
+		if other.a is None:  # ibid
+			return self 
+
+		# Case 2: The two points lie in a vertical line
+		if self.x == other.x and self.y != other.y:
+			return self.__class__(None, None, self.a, self.b)  # remember to return a _class_, not just a number
+
+		# Case 3: the points are not in a vertical line but are different
+		if self.x != other.x:
+			slope = (other.y - self.y)/(other.x - self.x)
+			x3 = slope**2 - self.x - other.x
+			y3 = slope*(self.x - x3) - self.y
+			return self.__class__(x3, y3, self.a, self.b)
+		
+		# Case 4: the points are the same
+		if self == other:
+			if self.y == 0:  # the sub-case where the tangent line is vertical --> slope is undefined and will choke trying to divide by 0
+				return self.__class__(None, None, self.a, self.b)  # by def'n, the point at infinity is the sum
+			slope = (3*self.x**2 + self.a)/(2*self.y)
+			x3 = slope**2 - 2*self.x
+			y3 = slope*(self.x - x3) - self.y
+			return self.__class__(x3, y3, self.a, self.b)
+
+	def __repr__(self):
+		return f'The point({self.x}, {self.y}) lies on y^2 = x^3 + {self.a}x + {self.b}.'

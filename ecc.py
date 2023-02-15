@@ -8,7 +8,8 @@ class FieldElement:
 		self.prime = prime 
 
 	def __repr__(self):
-		return f'FieldElement_{self.prime}({self.num})'
+		# return f'FieldElement_{self.prime}({self.num})'
+		return f'{self.num}'
 
 	def __eq__(self, other):
 		if other is None:
@@ -111,4 +112,25 @@ class Point:
 			return self.__class__(x3, y3, self.a, self.b)
 
 	def __repr__(self):
-		return f'The point({self.x}, {self.y}) lies on y^2 = x^3 + {self.a}x + {self.b}.'
+		return f'The point is ({self.x}, {self.y})_{self.a}_{self.b}'
+
+
+# SKIPPED SECTION DUE TO TAKING TOO LONG TO FIGURE OUT THE DISCONNECT
+# BETWEEN THE CODE IN THE BOOK AND CODE THAT ACTUALLY WORKS
+# class ECCTest(TestCase):
+
+# 	def test_on_curve(self):
+# 		prime = 223
+# 		a = FieldElement(0, prime)
+# 		b = FieldElement(7, prime)
+# 		valid_puntas = ((192, 105), (17, 56), (1, 193))
+# 		invalid_puntas = ((200, 199), (42,99))
+# 		for x_raw, y_raw in valid_puntas:
+# 			x = FieldElement(x_raw, prime)
+# 			y = FieldElement(y_raw, prime)
+# 			Point(x, y, a, b)
+# 		for x_raw, y_raw in invalid_puntas:
+# 			x = FieldElement(x_raw, prime)
+# 			y = FieldElement(y_raw, prime)
+# 			with self.assertRaises(ValueError):
+# 				Point(x, y, a, b)

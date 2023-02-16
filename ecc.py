@@ -1,3 +1,5 @@
+from unittest import TestCase
+
 class FieldElement:
 
 	def __init__(self, num, prime):
@@ -115,22 +117,40 @@ class Point:
 		return f'The point is ({self.x}, {self.y})_{self.a}_{self.b}'
 
 
-# SKIPPED SECTION DUE TO TAKING TOO LONG TO FIGURE OUT THE DISCONNECT
-# BETWEEN THE CODE IN THE BOOK AND CODE THAT ACTUALLY WORKS
-# class ECCTest(TestCase):
+class ECCTest(TestCase):
 
-# 	def test_on_curve(self):
-# 		prime = 223
-# 		a = FieldElement(0, prime)
-# 		b = FieldElement(7, prime)
-# 		valid_puntas = ((192, 105), (17, 56), (1, 193))
-# 		invalid_puntas = ((200, 199), (42,99))
-# 		for x_raw, y_raw in valid_puntas:
-# 			x = FieldElement(x_raw, prime)
-# 			y = FieldElement(y_raw, prime)
-# 			Point(x, y, a, b)
-# 		for x_raw, y_raw in invalid_puntas:
-# 			x = FieldElement(x_raw, prime)
-# 			y = FieldElement(y_raw, prime)
-# 			with self.assertRaises(ValueError):
-# 				Point(x, y, a, b)
+	def test_on_curve(self):
+		prime = 223
+		a = FieldElement(0, prime)
+		b = FieldElement(7, prime)
+		valid_puntas = ((192, 105), (17, 56), (1, 193))
+		invalid_puntas = ((200, 199), (42,99))
+		for x_raw, y_raw in valid_puntas:
+			x = FieldElement(x_raw, prime)
+			y = FieldElement(y_raw, prime)
+			Point(x, y, a, b)
+		for x_raw, y_raw in invalid_puntas:
+			x = FieldElement(x_raw, prime)
+			y = FieldElement(y_raw, prime)
+			with self.assertRaises(ValueError):
+				Point(x, y, a, b)
+
+
+	def test_add(self):
+		prime = 223
+		a = FieldElement(0, prime)
+		b = FieldElement(7, prime)
+
+		pairs = [
+			(170, 142, 60, 139),
+			(47, 71, 17, 56),
+			(143, 98, 76, 66)
+		]
+
+		for pair in pairs:
+			x1 = FieldElement(pair[0], prime)
+			y1 = FieldElement(pair[1], prime)
+			x2 = FieldElement(pair[2], prime)
+			y2 = FieldElement(pair[3], prime)
+			p1 = Point(x1, y1, a, b)
+			p2 = Point(x2, y2, a, b)

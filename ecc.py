@@ -55,6 +55,11 @@ class FieldElement:
 		return self.__class__(num, self.prime)
 
 
+	def __rmul__(self, scalar):
+		num = (self.num * scalar) % self.prime 
+		return self.__class__(num, self.prime)
+	
+
 	def __truediv__(self, other):
 		if self.prime != other.prime:
 			error = f'Two different fields detected...no bueno.'
@@ -114,16 +119,16 @@ class Point:
 			return self.__class__(x3, y3, self.a, self.b)
 		
 		# Case 4: the points are the same
-		# if self == other and self.y == FieldElement(0, self.prime):  # THE CODE CHOKES ON THIS LINE
-		if self == other and self.y == 0:
+		if self == other and self.y == 0 * self.x:
+		# if self == other and self.y == 0:
 			return self.__class__(None, None, self.a, self.b)
 		if self == other:
 			# print(f'type(self) = {type(self)}')
 			# print(f'type(self.y) = {type(self.y)}')
 			# if self.y == FieldElement(0, self.prime):  # the sub-case where the tangent line is vertical --> slope is undefined and will choke trying to divide by 0
 			# 	return self.__class__(None, None, self.a, self.b)  # by def'n, the point at infinity is the sum
-			slope = (3*self.x**2 + self.a)/(2*self.y)
-			x3 = slope**2 - 2*self.x
+			slope = (3 * self.x**2 + self.a)/(2 * self.y)
+			x3 = slope**2 - 2 * self.x
 			y3 = slope*(self.x - x3) - self.y
 			return self.__class__(x3, y3, self.a, self.b)
 

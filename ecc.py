@@ -101,10 +101,10 @@ class Point:
 			raise TypeError(error)
 
 		# Case 1: One of the points is the point at infinity
-		if self.a is None:   # self is the point at infinity so added this to other results in other (additive identity, bro)
+		if self.x is None:   # self is the point at infinity so added this to other results in other (additive identity, bro)
 			return other 
 
-		if other.a is None:  # ibid
+		if other.x is None:  # ibid
 			return self 
 
 		# Case 2: The two points lie in a vertical line
@@ -131,6 +131,18 @@ class Point:
 			x3 = slope**2 - 2 * self.x
 			y3 = slope*(self.x - x3) - self.y
 			return self.__class__(x3, y3, self.a, self.b)
+
+
+	def __rmul__(self, scalar):
+		coef = scalar
+		current = self 
+		result = self.__class__(None, None, self.a, self.b)
+		while coef:
+			if coef & 1:
+				result += current
+			current += current
+			coef >>= 1  # bit-shift to the right
+		return result
 
 
 	def __repr__(self):

@@ -62,8 +62,8 @@ class FieldElement:
         # self.num**(p-1) % p == 1
         # this means:
         # 1/n == pow(n, p-2, p)
-		# num = (self.num * other.num**(self.prime - 2)) % self.prime  # POSSIBLE DOUG-INDUCED ERROR
-		num = (self.num * (other.num**(self.prime - 2) % self.prime)) % self.prime
+		# num = (self.num * (other.num**(self.prime - 2) % self.prime)) % self.prime  # WTF does this not work???
+		num = (self.num * pow(other.num, self.prime - 2, self.prime)) % self.prime
 		return self.__class__(num, self.prime)
 
 	def __rmul__(self, scalar):

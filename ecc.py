@@ -188,3 +188,43 @@ class ECCTest(TestCase):
 			y2 = FieldElement(pair[3], prime)
 			p1 = Point(x1, y1, a, b)
 			p2 = Point(x2, y2, a, b)
+
+
+# some known constants for the secp256k1, Bitcoin's cryptographic elliptic curve
+A = 0
+B = 7
+P = 2**256 - 2**32 - 977
+N = 0xfffffffffffffffffffffffffffffffebaaedce6af48a03bbfd25e8cd0364141
+
+
+class S256Field(FieldElement):
+
+	def __init__(self, num, prime=None):
+		super().__init__(num, prime=P)
+
+	def __repr__(self):
+		return f'{self.num:x}'.zfill(64)
+
+
+class S256Point(Point):
+	def __init__(self, x, y, a=None, b=None):
+		a, b = S256Field(A), S256Field(B)
+		if type(x) == int:
+			super().__init__(S256Field(x), S256Field(y), a, b)
+		else:
+			super().__init__(x, y, a, b)  # we're not S256Field-ifying x & y in case we init the pt @ inf.
+
+	def __repr__(self):
+		if self.x is None:
+			return 'S256Point(infinity)'
+		else:
+			return f'S256Point({self.x}, {self.y})'
+
+	def __rmul__(self, scalar):
+		coef = scalar % N 
+		return super().__rmul__(coef)
+	
+
+# now that S256Point() is defined, we can add one more known constant, the generator point
+G = S256Point(0x79be667ef9dcbbac55a06295ce870b07029bfcdb2dce28d959f2815b16f81798, 0x483ada7726a3c4655da4fbfc0e1108a8fd17b448a68554199c47d08ffb10d4b8)
+

@@ -197,7 +197,7 @@ P = 2**256 - 2**32 - 977
 N = 0xfffffffffffffffffffffffffffffffebaaedce6af48a03bbfd25e8cd0364141
 
 
-class S256Field(FieldElement):
+class S256FieldElement(FieldElement):  # why omit the "Element" part, Jimmy???
 
 	def __init__(self, num, prime=None):
 		super().__init__(num, prime=P)
@@ -208,11 +208,11 @@ class S256Field(FieldElement):
 
 class S256Point(Point):
 	def __init__(self, x, y, a=None, b=None):
-		a, b = S256Field(A), S256Field(B)
+		a, b = S256FieldElement(A), S256FieldElement(B)
 		if type(x) == int:
-			super().__init__(S256Field(x), S256Field(y), a, b)
+			super().__init__(S256FieldElement(x), S256FieldElement(y), a, b)
 		else:
-			super().__init__(x, y, a, b)  # we're not S256Field-ifying x & y in case we init the pt @ inf.
+			super().__init__(x, y, a, b)  # we're not S256FieldElement-ifying x & y in case we init the pt @ inf.
 
 	def __repr__(self):
 		if self.x is None:

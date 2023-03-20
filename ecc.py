@@ -208,6 +208,9 @@ class S256FieldElement(FieldElement):  # why omit the "Element" part, Jimmy???
 	def __repr__(self):
 		return f'{self.num:x}'.zfill(64)
 
+	def sqrt(self):
+		return self**((P + 1) // 4)
+
 
 class S256Point(Point):
 	def __init__(self, x, y, a=None, b=None):
@@ -234,6 +237,48 @@ class S256Point(Point):
 		expected_r = u * G + v * self 
 		return expected_r == sig.r 
 	
+	def sec(self, compressed=True):
+		'''returns the serialized binary version of the SEC format, big-endian-style'''
+		x_big_endian = self.x.num.to_bytes(32, 'big')
+		if compressed:
+			if self.y.num % 2 == 0:
+				prefix_byte = b'\x02'
+			else:
+				prefix_byte = b'\x03'
+			return prefix_byte + x_big_endian
+		else:
+			prefix_byte = b'\x04'
+			y_big_endian = self.y.num.to_bytes(32, 'big')
+			return prefix_byte + x_big_endian + y_big_endian
+		
+	@classmethod
+	def parse(self, sec_bin):
+		'''returns a Point object from a SEC binary (note: not hex)'''
+		prefix = sec_bin[0] 
+		x_coordinate = int.from_bytes(sec_bin[1:33], 'big')
+		
+		if prefix == 4:  # ie, we're given both the x and y (uncompressed format)
+			y_coordinate = int.from_bytes(sec_bin[33:65], 'big')
+			return S256Point(x=x_coordinate, y=y_coordinate)
+		
+		# if we've reached this point, y is not given, just the x and the parity
+		# but we can solve for y since the equation is y^2 = x^3 + 7
+		rhs = S256FieldElement(x_coordinate)**3 + S256FieldElement(B)  # rhs := Right Hand Side
+		y_candidate = rhs.sqrt()
+
+		if y_candidate % 2 == 0:                                    # if the candidate is even
+			if prefix == 2:                                         # and we know the y should be even
+				y_solution = y_candidate                            # then the solution is the candidate
+			else:
+				y_solution = S256FieldElement(P - y_candidate.num)  # ow, it's the other possible candidate
+		else:
+			if prefix == 3:
+				y_solution = y_candidate
+			else:
+				y_solution = S256FieldElement(P - y_candidate.num)
+
+		return S256Point(S256FieldElement(x_coordinate), y_solution)
+
 
 # now that S256Point() is defined, we can add one more known constant, the generator point
 G = S256Point(0x79be667ef9dcbbac55a06295ce870b07029bfcdb2dce28d959f2815b16f81798, 0x483ada7726a3c4655da4fbfc0e1108a8fd17b448a68554199c47d08ffb10d4b8)
@@ -253,7 +298,8 @@ class PrivateKey:
 
 	def __init__(self, secret):
 		self.secret = secret
-		self.point = secret * G  # this is the public key, introduced here for convenience
+		# self.point = secret * G  # this is the public key, introduced here for convenience
+		self.public_key = secret * G  
 
 	def hex(self):
 		return f'{self.secret:x}'.zfill(64)

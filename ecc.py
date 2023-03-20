@@ -3,6 +3,8 @@ from random import randint  ## NB: DO NOT USE FOR PRODUCTION...NOT RANDOM ENOUGH
 import hashlib 
 import hmac 
 
+from secret_helper import encode_base58_checksum, hash160
+
 class FieldElement:
 
 	def __init__(self, num, prime):
@@ -279,6 +281,18 @@ class S256Point(Point):
 
 		return S256Point(S256FieldElement(x_coordinate), y_solution)
 
+	def hash160(self, compressed=True):
+		return hash160(self.sec(compressed))
+	
+	def address(self, compressed=True, testnet=False):
+		'''returns the address string'''
+		h160 = self.hash160(compressed)
+		if testnet:
+			prefix = b'\x6f'
+		else:
+			prefix = b'\x00'
+		return encode_base58_checksum(prefix + h160)
+	
 
 # now that S256Point() is defined, we can add one more known constant, the generator point
 G = S256Point(0x79be667ef9dcbbac55a06295ce870b07029bfcdb2dce28d959f2815b16f81798, 0x483ada7726a3c4655da4fbfc0e1108a8fd17b448a68554199c47d08ffb10d4b8)
@@ -293,6 +307,27 @@ class Signature:
 	def __repr__(self):
 		return f'Signature({self.r},{self.s})'
 	
+	def der(self):
+		der_prefix = 0x30
+		r_marker = 0x02
+		s_marker = 0x02
+
+		r = self.r.to_bytes(32, 'big').lstrip(b'\x00')
+		if r[0] & 0x80:  # bitwise AND op to look for the most sign. bit set to 1 --> negative #
+			r = b'\x00' + r
+		r_len = len(r)
+		sig = bytes([r_marker, r_len]) + r
+
+		s = self.s.to_bytes(32, 'big').lstrip(b'\x00')
+		if s[0] & 0x80:
+			s = b'\x00' + s
+		s_len = len(s)
+		sig += bytes([s_marker, s_len]) + s
+
+		sig_len = len(sig)
+
+		return bytes([der_prefix, sig_len]) + sig
+
 
 class PrivateKey:
 
@@ -333,3 +368,18 @@ class PrivateKey:
 				return candidate
 			k = hmac.new(k, v + b'\x00', s256).digest()
 			v = hmac.new(k, v, s256).digest()
+
+	def wif(self, compressed=True, testnet=False):
+		secret_bytes = self.secret.to_bytes(32, 'big')
+
+		if testnet:
+			prefix = b'\xef'
+		else:
+			prefix = b'\x80'
+
+		if compressed:
+			suffix = b'\x01'
+		else:
+			suffix = b''
+
+		return encode_base58_checksum(prefix + secret_bytes + suffix)

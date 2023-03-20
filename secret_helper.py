@@ -5,6 +5,8 @@ from unittest import TestSuite, TextTestRunner
 
 import hashlib
 
+BASE58_ALPHABET = '123456789ABCDEFGHJKLMNPQRSTUVWXYZabcdefghijkmnopqrstuvwxyz'
+
 def run(test):
 	suite = TestSuite()
 	suite.addTest(test)
@@ -14,3 +16,30 @@ def run(test):
 def hash256(s):
 	'''two rounds of sha256'''
 	return hashlib.sha256(hashlib.sha256(s).digest()).digest()
+
+
+def encode_base58(s: bytes):
+	n_zero_bytes = 0
+	for b in s: 
+		if b == 0:
+			n_zero_bytes += 1
+		else:
+			break
+	prefix = '1' * n_zero_bytes
+
+	num = int.from_bytes(s, 'big')
+	result = ''
+	while num > 0:
+		num, mod = divmod(num, 58)
+		result = BASE58_ALPHABET[mod] + result
+
+	return prefix + result
+
+
+def encode_base58_checksum(b: bytes):
+	return encode_base58(b + hash256(b)[:4])
+
+
+def hash160(s: bytes):
+	'''sha256 followed by ripemd160'''
+	return hashlib.new('ripemd160', hashlib.sha256(s).digest()).digest()
